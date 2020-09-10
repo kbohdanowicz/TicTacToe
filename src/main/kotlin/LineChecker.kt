@@ -2,6 +2,8 @@ class LineChecker(
         private val array2d: Array<Array<Cell>>,
         private val amountToWin: Int
 ) {
+    private val arraySize = array2d.size * array2d[0].size
+
     fun isHorizontalLine(cellType: CellType): Boolean {
         var sum: Int
         for (row in array2d) {
@@ -38,12 +40,24 @@ class LineChecker(
                 return if (sum == amountToWin) true else continue
             }
         }
-
         sum = 0
         for ((i, row) in array2d.withIndex()) {
             if (row[(array2d.lastIndex) - i].type == cellType) {
                 sum++
                 return if (sum == amountToWin) true else continue
+            }
+        }
+        return false
+    }
+
+    fun isNoSpaceLeft(): Boolean {
+        var sum = 0
+        for (row in array2d) {
+            for (cell in row) {
+                if (cell.type != CellType.NONE) {
+                    sum++
+                    return if (sum == arraySize) true else continue
+                }
             }
         }
         return false

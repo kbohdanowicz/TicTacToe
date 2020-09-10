@@ -20,6 +20,7 @@ class TicTacToe {
     private var currentCellType = CellType.CIRCLE
     private var isWrongInput = false
     private var turnCount = 0
+    private val lineChecker = LineChecker(board, amountToWin)
 
     private fun clearBoard() {
         for (row in board)
@@ -33,7 +34,6 @@ class TicTacToe {
     }
 
     private fun isGameOver(currentCellType: CellType): Boolean {
-        val lineChecker = LineChecker(board, amountToWin)
         return lineChecker.run {
             isHorizontalLine(currentCellType)
                     || isVerticalLine(currentCellType)
@@ -55,7 +55,6 @@ class TicTacToe {
         val input = readLine() as String
         if (allowedMoves.containsKey(input)) {
             val (i, j) = allowedMoves.getValue(input)
-
             if (board[i][j].type == CellType.NONE) {
                 board[i][j] = Cell(currentCellType)
             } else {
@@ -66,13 +65,20 @@ class TicTacToe {
         }
     }
 
+    private fun printBoardWithMessage(message: String) {
+        println(message)
+        println("\n$this\n")
+    }
+
     fun newGame() {
         clearBoard()
         while (true) {
             clearScreen()
             if (isGameOver(currentCellType)) {
-                println("Player $currentPlayer wins in $turnCount turns!")
-                println("\n$this\n")
+                printBoardWithMessage("Player $currentPlayer wins in $turnCount turns!")
+                break
+            } else if (lineChecker.isNoSpaceLeft()) {
+                printBoardWithMessage("Draw!")
                 break
             }
             turnCount++
@@ -83,8 +89,7 @@ class TicTacToe {
             } else if (turnCount > 1) {
                 changePlayer()
             }
-            println("Player $currentPlayer turn!")
-            println("\n$this\n")
+            printBoardWithMessage("Player $currentPlayer turn!")
             handleUserInput()
         }
     }
