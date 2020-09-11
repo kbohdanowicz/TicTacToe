@@ -1,8 +1,12 @@
-import java.lang.StringBuilder
+package dev
 
-class TicTacToe {
-    private val board: Array<Array<Cell>> = Array(3) {
-        Array(3) { Cell() }
+import java.lang.StringBuilder
+import dev.BoardSize.*
+import dev.Cell.*
+
+class TicTacToe(private val boardSize: BoardSize = REGULAR) {
+    private val board: Array<Array<Cell>> = Array(boardSize.value()) {
+        Array(boardSize.value()) { NONE }
     }
     private val allowedMoves = mutableMapOf(
             "a1" to Pair(0, 0),
@@ -15,9 +19,9 @@ class TicTacToe {
             "c2" to Pair(2, 1),
             "c3" to Pair(2, 2)
     )
-    private val amountToWin = 3
+    private val amountToWin = board.size
     private var currentPlayer = 1
-    private var currentCellType = CellType.CIRCLE
+    private var currentCellType = CIRCLE
     private var isWrongInput = false
     private var turnCount = 0
     private val lineChecker = LineChecker(board, amountToWin)
@@ -25,7 +29,7 @@ class TicTacToe {
     private fun clearBoard() {
         for (row in board)
             for (i in row.indices)
-                row[i] = Cell()
+                row[i] = NONE
     }
 
     private fun clearScreen() {
@@ -33,7 +37,7 @@ class TicTacToe {
             println("\n")
     }
 
-    private fun isGameOver(currentCellType: CellType): Boolean {
+    private fun isGameOver(currentCellType: Cell): Boolean {
         return lineChecker.run {
             isHorizontalLine(currentCellType)
                     || isVerticalLine(currentCellType)
@@ -44,10 +48,10 @@ class TicTacToe {
     private fun changePlayer() {
         if (currentPlayer == 1) {
             currentPlayer = 2
-            currentCellType = CellType.CROSS
+            currentCellType = Cell.CROSS
         } else {
             currentPlayer = 1
-            currentCellType = CellType.CIRCLE
+            currentCellType = Cell.CIRCLE
         }
     }
 
@@ -55,8 +59,8 @@ class TicTacToe {
         val input = readLine() as String
         if (allowedMoves.containsKey(input)) {
             val (i, j) = allowedMoves.getValue(input)
-            if (board[i][j].type == CellType.NONE) {
-                board[i][j] = Cell(currentCellType)
+            if (board[i][j].toString() == NONE.toString()) {
+                board[i][j] = currentCellType
             } else {
                 isWrongInput = true
             }
@@ -95,30 +99,30 @@ class TicTacToe {
     }
 
     override fun toString(): String {
-        val result = StringBuilder()
-        val verticalMarkers = listOf("A", "B", "C")
-        val horizontalMarkers = listOf("1", "2", "3")
+        val verticalMarkers = List(board.size) { (it + 65).toChar() }
+        val horizontalMarkers = List(board.size) { it + 1 }
         val threeSpaces = "   "
         val twoSpaces = "  "
+        val result = StringBuilder()
 
-        result.apply {
+        with(result) {
             append(horizontalMarkers.joinToString(threeSpaces, threeSpaces))
             append("\n")
         }
         for ((i, row) in board.withIndex()) {
-            result.apply {
+            with(result) {
                 append(verticalMarkers[i])
                 append(row.joinToString(" | ", twoSpaces))
             }
-            if(i < board.lastIndex) {
-                result.apply {
+            if (i < board.lastIndex) {
+                with(result) {
                     append("\n  ")
-                    append("-----------")
+                    repeat(board.size) { append("---") }
+                    repeat(board.size - 1) { append("-") }
                     append("\n")
                 }
             }
         }
-
         return result.toString()
     }
 }

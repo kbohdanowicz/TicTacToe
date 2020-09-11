@@ -1,41 +1,57 @@
+import dev.Cell
+import dev.LineChecker
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+
+import dev.Cell.*
 
 class LineCheckerTest {
     @Test
     fun `is horizontal line test`() {
         val arr: Array<Array<Cell>> = arrayOf(
-                arrayOf(Cell(), Cell(), Cell()),
-                arrayOf(Cell(), Cell(), Cell()),
-                arrayOf(Cell(CellType.CROSS), Cell(CellType.CROSS), Cell(CellType.CROSS))
+                arrayOf(NONE, NONE, NONE),
+                arrayOf(NONE, NONE, NONE),
+                arrayOf(CROSS, CROSS, CROSS)
         )
         val lc = LineChecker(arr, 3)
 
-        assertEquals(true, lc.isHorizontalLine(CellType.CROSS))
+        assertEquals(true, lc.isHorizontalLine(CROSS))
     }
 
 
     @Test
     fun `is vertical line test`() {
         val arr: Array<Array<Cell>> = arrayOf(
-                arrayOf(Cell(CellType.CROSS), Cell(), Cell()),
-                arrayOf(Cell(CellType.CROSS), Cell(), Cell()),
-                arrayOf(Cell(CellType.CROSS), Cell(), Cell())
+                arrayOf(CROSS, NONE, NONE),
+                arrayOf(CROSS, NONE, NONE),
+                arrayOf(CROSS, NONE, NONE)
         )
         val lc = LineChecker(arr, 3)
 
-        assertEquals(true, lc.isVerticalLine(CellType.CROSS))
+        assertEquals(true, lc.isVerticalLine(CROSS))
     }
 
     @Test
     fun `is diagonal line test`() {
         val arr: Array<Array<Cell>> = arrayOf(
-                arrayOf(Cell(), Cell(), Cell(CellType.CROSS)),
-                arrayOf(Cell(), Cell(CellType.CROSS), Cell()),
-                arrayOf(Cell(CellType.CROSS), Cell(), Cell())
+                arrayOf(NONE, NONE, CROSS),
+                arrayOf(NONE, CROSS, NONE),
+                arrayOf(CROSS, NONE, NONE)
         )
         val lc = LineChecker(arr, 3)
 
-        assertEquals(true, lc.isDiagonalLine(CellType.CROSS))
+        assertEquals(true, lc.isDiagonalLine(CROSS))
+    }
+
+    @Test
+    fun `is no space left test`() {
+        val arr: Array<Array<Cell>> = arrayOf(
+                arrayOf(CROSS, CROSS, CROSS),
+                arrayOf(CROSS, CROSS, CROSS),
+                arrayOf(CROSS, CROSS, CROSS)
+        )
+        val lc = LineChecker(arr, 3)
+
+        assertEquals(true, lc.isNoSpaceLeft())
     }
 }
