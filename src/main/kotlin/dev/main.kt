@@ -1,8 +1,6 @@
 package dev
 
-import dev.BoardSize.*
-
 fun main() {
-    val game = TicTacToe(EXTENDED)
+    val game = TicTacToe(4,3)
     game.newGame()
 }

@@ -1,35 +1,43 @@
 package dev
 
-import java.lang.StringBuilder
-import dev.BoardSize.*
-import dev.Cell.*
+import dev.CellType.*
+import kotlin.text.StringBuilder
 
-class TicTacToe(private val boardSize: BoardSize = REGULAR) {
-    private val board: Array<Array<Cell>> = Array(boardSize.value()) {
-        Array(boardSize.value()) { NONE }
+class TicTacToe(
+        private val boardSize: Int,
+        private var playerCount: Int//,
+        // TODO private val amountToWin: Int
+) {
+    private val board: Array<Array<CellType>> = Array(boardSize) {
+        Array(boardSize) { EMPTY }
     }
-    private val allowedMoves = mutableMapOf(
-            "a1" to Pair(0, 0),
-            "a2" to Pair(0, 1),
-            "a3" to Pair(0, 2),
-            "b1" to Pair(1, 0),
-            "b2" to Pair(1, 1),
-            "b3" to Pair(1, 2),
-            "c1" to Pair(2, 0),
-            "c2" to Pair(2, 1),
-            "c3" to Pair(2, 2)
-    )
+    private val allowedMoves: Map<String, Pair<Int, Int>>
     private val amountToWin = board.size
-    private var currentPlayer = 1
-    private var currentCellType = CIRCLE
+    private val lineChecker = LineChecker(board, amountToWin)
+
+    private var currentPlayer = Player()
     private var isWrongInput = false
     private var turnCount = 0
-    private val lineChecker = LineChecker(board, amountToWin)
+
+    init {
+        // initialize allowedMoves property
+        val tempList = mutableListOf<Pair<Int, Int>>()
+        for (x in 0 until boardSize) {
+            for (y in 0 until boardSize) {
+                tempList.add(Pair(x, y))
+            }
+        }
+        allowedMoves = tempList.map { "${getAsciiAlphabetLetter(it.first)}${it.second + 1}" to it }.toMap()
+    }
+
+    private fun getAsciiAlphabetLetter(number: Int, upperCase: Boolean = true): Char {
+        return if (upperCase) (number + 65).toChar() else (number + 65).toChar().toLowerCase()
+    }
 
     private fun clearBoard() {
         for (row in board)
             for (i in row.indices)
-                row[i] = NONE
+                row[i] = EMPTY
     }
 
     private fun clearScreen() {
@@ -37,30 +45,25 @@ class TicTacToe(private val boardSize: BoardSize = REGULAR) {
             println("\n")
     }
 
-    private fun isGameOver(currentCellType: Cell): Boolean {
+    private fun isThereAnyLine(cellType: CellType): Boolean {
         return lineChecker.run {
-            isHorizontalLine(currentCellType)
-                    || isVerticalLine(currentCellType)
-                    || isDiagonalLine(currentCellType)
+            isHorizontalLine(cellType)
+                    || isVerticalLine(cellType)
+                    || isDiagonalLine(cellType)
         }
     }
 
     private fun changePlayer() {
-        if (currentPlayer == 1) {
-            currentPlayer = 2
-            currentCellType = Cell.CROSS
-        } else {
-            currentPlayer = 1
-            currentCellType = Cell.CIRCLE
-        }
+        val nextPlayerNumber = currentPlayer.number + 1
+        currentPlayer = if (nextPlayerNumber >= playerCount) Player(0) else Player(nextPlayerNumber)
     }
 
     private fun handleUserInput() {
         val input = readLine() as String
         if (allowedMoves.containsKey(input)) {
             val (i, j) = allowedMoves.getValue(input)
-            if (board[i][j].toString() == NONE.toString()) {
-                board[i][j] = currentCellType
+            if (board[i][j].symbol == EMPTY.symbol) {
+                board[i][j] = currentPlayer.cellType
             } else {
                 isWrongInput = true
             }
@@ -78,8 +81,8 @@ class TicTacToe(private val boardSize: BoardSize = REGULAR) {
         clearBoard()
         while (true) {
             clearScreen()
-            if (isGameOver(currentCellType)) {
-                printBoardWithMessage("Player $currentPlayer wins in $turnCount turns!")
+            if (isThereAnyLine(currentPlayer.cellType)) {
+                printBoardWithMessage("Player ${currentPlayer.number + 1} wins in $turnCount turns!")
                 break
             } else if (lineChecker.isNoSpaceLeft()) {
                 printBoardWithMessage("Draw!")
@@ -93,13 +96,14 @@ class TicTacToe(private val boardSize: BoardSize = REGULAR) {
             } else if (turnCount > 1) {
                 changePlayer()
             }
-            printBoardWithMessage("Player $currentPlayer turn!")
+            printBoardWithMessage("Player ${currentPlayer.number + 1} turn!")
             handleUserInput()
         }
     }
 
+    // do NOT expand this function anymore
     override fun toString(): String {
-        val verticalMarkers = List(board.size) { (it + 65).toChar() }
+        val verticalMarkers = List(board.size) { getAsciiAlphabetLetter(it) } // A, B, C...
         val horizontalMarkers = List(board.size) { it + 1 }
         val threeSpaces = "   "
         val twoSpaces = "  "
@@ -112,7 +116,7 @@ class TicTacToe(private val boardSize: BoardSize = REGULAR) {
         for ((i, row) in board.withIndex()) {
             with(result) {
                 append(verticalMarkers[i])
-                append(row.joinToString(" | ", twoSpaces))
+                append(row.joinToString(" | ", twoSpaces) { it.symbol })
             }
             if (i < board.lastIndex) {
                 with(result) {

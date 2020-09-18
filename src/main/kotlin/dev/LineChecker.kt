@@ -1,19 +1,19 @@
 package dev
 
-import dev.Cell.*
+import dev.CellType.*
 
 class LineChecker(
-        private val array2d: Array<Array<Cell>>,
+        private val board: Array<Array<CellType>>,
         private val amountToWin: Int
 ) {
-    private val arraySize = array2d.size * array2d[0].size
+    private val arraySize = board.size * board[0].size
 
-    fun isHorizontalLine(cellType: Cell): Boolean {
+    fun isHorizontalLine(cellType: CellType): Boolean {
         var sum: Int
-        for (row in array2d) {
+        for (row in board) {
             sum = 0
             for (cell in row) {
-                if (cell.toString() == cellType.toString()) {
+                if (cell.symbol == cellType.symbol) {
                     sum++
                     return if (sum == amountToWin) true else continue
                 }
@@ -22,12 +22,12 @@ class LineChecker(
         return false
     }
 
-    fun isVerticalLine(cellType: Cell): Boolean {
+    fun isVerticalLine(cellType: CellType): Boolean {
         var sum: Int
-        for (index in array2d.indices) {
+        for (index in board.indices) {
             sum = 0
-            for (row in array2d) {
-                if (row[index].toString() == cellType.toString()) {
+            for (row in board) {
+                if (row[index].symbol == cellType.symbol) {
                     sum++
                     return if (sum == amountToWin) true else continue
                 }
@@ -36,14 +36,14 @@ class LineChecker(
         return false
     }
 
-    fun isDiagonalLine(cellType: Cell): Boolean {
-        var tempArray: Iterable<IndexedValue<Array<Cell>>>
+    fun isDiagonalLine(cellType: CellType): Boolean {
+        var tempArray: Iterable<IndexedValue<Array<CellType>>>
         var sum: Int
         for (j in 0..1) {
-            tempArray = if (j == 0) array2d.withIndex() else array2d.reversed().withIndex()
+            tempArray = if (j == 0) board.withIndex() else board.reversed().withIndex()
             sum = 0
             for ((index, row) in tempArray) {
-                if (row[index].toString() == cellType.toString()) {
+                if (row[index].symbol == cellType.symbol) {
                     sum++
                     return if (sum == amountToWin) true else continue
                 }
@@ -54,9 +54,9 @@ class LineChecker(
 
     fun isNoSpaceLeft(): Boolean {
         var sum = 0
-        for (row in array2d) {
+        for (row in board) {
             for (cell in row) {
-                if (cell.toString() != NONE.toString()) {
+                if (cell.symbol != EMPTY.symbol) {
                     sum++
                     return if (sum == arraySize) true else continue
                 }
