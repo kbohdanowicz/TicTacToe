@@ -10,13 +10,16 @@ class LineChecker(
     private val matrixSize = board.size * board[0].size
 
     fun isHorizontalLine(cellType: CellType): Boolean {
-        var sum: Int
         for (row in board) {
-            sum = 0
+            var sum = 0
+            var lastCellType = cellType
             for (cell in row) {
-                if (cell.symbol == cellType.symbol) {
+                if (cell == cellType && lastCellType == cellType) {
+                    lastCellType = cellType
                     sum++
                     return if (sum == amountToWin) true else continue
+                } else {
+                    lastCellType = cell
                 }
             }
         }
@@ -24,57 +27,87 @@ class LineChecker(
     }
 
     fun isVerticalLine(cellType: CellType): Boolean {
-        var sum: Int
-        for (index in board.indices) {
-            sum = 0
+        for (i in board[0].indices) {
+            var sum = 0
+            var lastCellType = cellType
             for (row in board) {
-                if (row[index].symbol == cellType.symbol) {
+                if (row[i] == cellType && lastCellType == cellType) {
+                    lastCellType = cellType
                     sum++
                     return if (sum == amountToWin) true else continue
+                } else {
+                    lastCellType = row[i]
                 }
             }
         }
         return false
     }
 
-    private fun getBoardCoordinates(): List<Pair<Int, Int>> {
-        val result = mutableListOf<Pair<Int, Int>>()
-        var i = (board.size - 2) * (-1)
+    private fun Array<Array<CellType>>.getCoordinates(): List<Pair<Int, Int>> {
+        val coords = mutableListOf<Pair<Int, Int>>()
+        var i = (this.size - 2) * (-1)
         var pair: Pair<Int, Int>
-        while (i < board.size - 1) {
+        while (i < this.size - 1) {
             pair = when {
                 i < 0 -> Pair(abs(i), 0)
                 i > 0 -> Pair(0, i)
                 else -> Pair(0, 0)
             }
-            result.add(pair)
+            coords.add(pair)
             i++
         }
-        return result.toList()
+        return coords.toList()
     }
 
+    private fun Array<Array<CellType>>.transposed(): Array<Array<CellType>> {
+        val transposedBoard = Array(this[0].size) {
+            Array(this.size) { UNDEFINED }
+        }
+        for (colIndex in this[0].indices) {
+            for ((rowIndex, row) in this.withIndex()) {
+                transposedBoard[colIndex][rowIndex] = row[colIndex]
+            }
+        }
+        for (row in transposedBoard) {
+            if (row.contains(UNDEFINED))
+                throw Exception("Matrix transposing failed")
+        }
+        return transposedBoard
+    }
+
+    private val Array<Array<CellType>>.shorterEdge: Int
+        get() = if (this.size < this[0].size) this.size else this[0].size
+
     fun isDiagonalLine(cellType: CellType): Boolean {
-        val coords = getBoardCoordinates()
-        var tempArray: Array<Array<CellType>>
-        var lastX: Int
-        var lineLength: Int
-        var sum: Int
         for (k in 0..1) {
-            tempArray = if (k == 0) board else board.reversed().toTypedArray()
-            lastX = coords[0].component1()
-            lineLength = board.size - 1
+            val tempBoard = if (k == 0) board else board.transposed()
+            val maxLineLength = tempBoard.shorterEdge
+            val coords = tempBoard.getCoordinates()
+            var lastX = coords[0].first
+            var lastY = coords[0].second
+            var lastCellType = cellType
+            var lineLength = 2
             for (pair in coords) {
-                sum = 0
+                var sum = 0
                 val (x, y) = pair
                 if (x < lastX) {
-                    lineLength++
+                    if (lineLength < maxLineLength) {
+                        lineLength++
+                    }
                     lastX = x
-                } else {
+                } else if (y > lastY){
                     lineLength--
+                    lastY = y
                 }
-                for (j in 0..lineLength) {
-                    if (tempArray[x + j][y + j] == cellType)
+                for (j in 0 until lineLength) {
+                    if (lastCellType != cellType)
+                        sum = 0
+                    lastCellType = if (tempBoard[x + j][y + j] == cellType) {
                         sum++
+                        cellType
+                    } else {
+                        tempBoard[x + j][y + j]
+                    }
                 }
                 if (sum >= amountToWin)
                     return true

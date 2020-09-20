@@ -13,11 +13,12 @@ enum class CellType(val symbol: String) {
     EIGHTH("F"),
     NINTH("G"),
     TENTH("H"),
-    EMPTY(" ");
+    EMPTY(" "),
+    UNDEFINED("UNDEFINED");
     companion object {
         fun getByIndex(number: Int): CellType {
             for (cellType in values()) {
-                if (cellType == EMPTY)
+                if (cellType == EMPTY || cellType == UNDEFINED)
                     throw Exception("Player number stack overflow")
                 if (number == cellType.ordinal)
                     return cellType

@@ -1,6 +1,6 @@
 package dev
 
 fun main() {
-    val game = TicTacToe(3,2, 3)
+    val game = TicTacToe(5,4, 2,3)
     game.newGame()
 }
