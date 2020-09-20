@@ -4,15 +4,14 @@ import dev.CellType.*
 import kotlin.text.StringBuilder
 
 class TicTacToe(
-        private val boardSize: Int,
-        private var playerCount: Int//,
-        // TODO private val amountToWin: Int
+        private val boardSizeXY: Int,
+        private var playerCount: Int,
+        amountToWin: Int,
 ) {
-    private val board: Array<Array<CellType>> = Array(boardSize) {
-        Array(boardSize) { EMPTY }
+    private val board: Array<Array<CellType>> = Array(boardSizeXY) {
+        Array(boardSizeXY) { EMPTY }
     }
     private val allowedMoves: Map<String, Pair<Int, Int>>
-    private val amountToWin = board.size
     private val lineChecker = LineChecker(board, amountToWin)
 
     private var currentPlayer = Player()
@@ -22,16 +21,21 @@ class TicTacToe(
     init {
         // initialize allowedMoves property
         val tempList = mutableListOf<Pair<Int, Int>>()
-        for (x in 0 until boardSize) {
-            for (y in 0 until boardSize) {
+        for (x in 0 until boardSizeXY) {
+            for (y in 0 until boardSizeXY) {
                 tempList.add(Pair(x, y))
             }
         }
-        allowedMoves = tempList.map { "${getAsciiAlphabetLetter(it.first)}${it.second + 1}" to it }.toMap()
+        allowedMoves = tempList.map { "${getAsciiAlphabetByIndex(it.first, false)}${it.second + 1}" to it }.toMap()
     }
 
-    private fun getAsciiAlphabetLetter(number: Int, upperCase: Boolean = true): Char {
-        return if (upperCase) (number + 65).toChar() else (number + 65).toChar().toLowerCase()
+    private fun getAsciiAlphabetByIndex(number: Int, upperCase: Boolean = true): Char {
+        val asciiAlphabetStartNumber = 65
+        return if (upperCase) {
+            (number + asciiAlphabetStartNumber).toChar()
+        } else {
+            (number + asciiAlphabetStartNumber).toChar().toLowerCase()
+        }
     }
 
     private fun clearBoard() {
@@ -101,9 +105,9 @@ class TicTacToe(
         }
     }
 
-    // do NOT expand this function anymore
+    // do NOT extend this function anymore
     override fun toString(): String {
-        val verticalMarkers = List(board.size) { getAsciiAlphabetLetter(it) } // A, B, C...
+        val verticalMarkers = List(board.size) { getAsciiAlphabetByIndex(it) } // A, B, C...
         val horizontalMarkers = List(board.size) { it + 1 }
         val threeSpaces = "   "
         val twoSpaces = "  "
