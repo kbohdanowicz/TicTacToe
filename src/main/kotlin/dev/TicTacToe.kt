@@ -1,43 +1,41 @@
 package dev
 
 import dev.CellType.*
+import java.lang.IllegalArgumentException
 import kotlin.text.StringBuilder
 
 class TicTacToe(
         rowCount: Int,
         columnCount: Int,
         private val playerCount: Int,
-        amountToWin: Int,
+        amountToWin: Int
 ) {
-    private val board: Array<Array<CellType>> = Array(rowCount) {
-        Array(columnCount) { EMPTY }
-    }
+    private val maxBoardSize = 26
+    private val board: Array<Array<CellType>>
+    private val alphabet: Array<Char>
+    private val lineChecker: LineChecker
     private val allowedMoves: Map<String, Pair<Int, Int>>
-    private val lineChecker = LineChecker(board, amountToWin)
 
     private var currentPlayer = Player()
     private var isInputInvalid = false
     private var turnCount = 0
 
     init {
-        // initialize allowedMoves property
+        if (rowCount >= maxBoardSize || columnCount >= maxBoardSize) {
+            throw IllegalArgumentException("Max board size is $maxBoardSize")
+        }
+
+        board = Array(rowCount) { Array(columnCount) { EMPTY } }
+        alphabet = Array(maxBoardSize) { (it + 97).toChar() }
+        lineChecker = LineChecker(board, amountToWin)
+
         val tempList = mutableListOf<Pair<Int, Int>>()
         for (x in 0 until rowCount) {
             for (y in 0 until columnCount) {
                 tempList.add(Pair(x, y))
             }
         }
-        allowedMoves = tempList.map { "${getAsciiAlphabetByIndex(it.first, false)}${it.second + 1}" to it }.toMap()
-    }
-
-    private fun getAsciiAlphabetByIndex(number: Int, upperCase: Boolean = true): Char {
-        val asciiAlphabetStartNumber = 65
-        return if (upperCase) {
-            (number + asciiAlphabetStartNumber).toChar()
-        } else {
-            (number + asciiAlphabetStartNumber).toChar().toLowerCase()
-        }
-    }
+        allowedMoves = tempList.map { "${alphabet[it.first]}${it.second + 1}" to it }.toMap() }
 
     private fun clearBoard() {
         for (row in board)
@@ -111,7 +109,7 @@ class TicTacToe(
 
     // do NOT extend this function anymore
     override fun toString(): String {
-        val verticalMarkers = List(board.size) { getAsciiAlphabetByIndex(it) } // A, B, C...
+        val verticalMarkers = List(board.size) { alphabet[it].toUpperCase() }
         val horizontalMarkers = List(board[0].size) { it + 1 }
         val threeSpaces = "   "
         val twoSpaces = "  "
