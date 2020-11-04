@@ -6,41 +6,39 @@ import kotlin.text.StringBuilder
 
 class TicTacToe(
         rowCount: Int,
-        columnCount: Int,
+        colCount: Int,
         private val playerCount: Int,
         amountToWin: Int
 ) {
     private val maxBoardSize = 26
-    private val board: Array<Array<CellType>>
+    private val board: Matrix<CellType>
     private val alphabet: Array<Char>
     private val lineChecker: LineChecker
-    private val allowedMoves: Map<String, Pair<Int, Int>>
+    private val allowedMoves: Map<String, Coordinates>
 
     private var currentPlayer = Player()
-    private var isInputInvalid = false
+    private var isInputValid = true
     private var turnCount = 0
 
     init {
-        if (rowCount >= maxBoardSize || columnCount >= maxBoardSize) {
+        if (rowCount >= maxBoardSize || colCount >= maxBoardSize)
             throw IllegalArgumentException("Max board size is $maxBoardSize")
-        }
 
-        board = Array(rowCount) { Array(columnCount) { EMPTY } }
+        board = Matrix(rowCount, colCount) { NONE }
         alphabet = Array(maxBoardSize) { (it + 97).toChar() }
         lineChecker = LineChecker(board, amountToWin)
 
-        val tempList = mutableListOf<Pair<Int, Int>>()
-        for (x in 0 until rowCount) {
-            for (y in 0 until columnCount) {
-                tempList.add(Pair(x, y))
-            }
+        val flatCoordinates = board.flatMap { row ->
+            row.indices.map { board.indexOf(row) to it }
         }
-        allowedMoves = tempList.map { "${alphabet[it.first]}${it.second + 1}" to it }.toMap() }
+        // associate key to Pair(x, y)
+        allowedMoves = flatCoordinates.associateBy { "${alphabet[it.first]}${it.second + 1}" }
+    }
 
     private fun clearBoard() {
-        for (row in board)
-            for (i in row.indices)
-                row[i] = EMPTY
+        board.forEach { row ->
+            row.indices.forEach { row[it] = NONE }
+        }
     }
 
     private fun clearScreen() {
@@ -57,21 +55,20 @@ class TicTacToe(
     }
 
     private fun changePlayer() {
-        val nextPlayerNumber = (currentPlayer.number + 1) % playerCount
-        currentPlayer = Player(nextPlayerNumber)
+        currentPlayer = Player((currentPlayer.number + 1) % playerCount)
     }
 
     private fun handleUserInput() {
         val input = readLine() as String
         if (allowedMoves.containsKey(input)) {
             val (i, j) = allowedMoves.getValue(input)
-            if (board[i][j].symbol == EMPTY.symbol) {
+            if (board[i][j] == NONE) {
                 board[i][j] = currentPlayer.cellType
             } else {
-                isInputInvalid = true
+                isInputValid = false
             }
         } else {
-            isInputInvalid = true
+            isInputValid = false
         }
     }
 
@@ -81,36 +78,37 @@ class TicTacToe(
 
     fun newGame() {
         clearBoard()
-        while (true) {
+        do {
             println("Player ${currentPlayer.number + 1} turn!")
             printBoard()
             handleUserInput()
             clearScreen()
+            when {
+                isAnyLine(currentPlayer.cellType) -> {
+                    println("Player ${currentPlayer.number + 1} wins in $turnCount turns!")
+                    printBoard()
+                    break
+                }
+                lineChecker.isNoSpaceLeft() -> {
+                    println("Draw!")
+                    printBoard()
+                    break
+                }
+                !isInputValid -> {
+                    println("[ERROR]: Wrong input format!")
+                    isInputValid = true
+                    continue
+                }
+            }
             turnCount++
-            if (isAnyLine(currentPlayer.cellType)) {
-                println("Player ${currentPlayer.number + 1} wins in $turnCount turns!")
-                printBoard()
-                break
-            }
-            if (lineChecker.isNoSpaceLeft()) {
-                println("Draw!")
-                printBoard()
-                break
-            }
-            if (isInputInvalid) {
-                println("[ERROR]: Wrong input format!")
-                isInputInvalid = false
-                turnCount--
-                continue
-            }
             changePlayer()
-        }
+        } while (true)
     }
 
     // do NOT extend this function anymore
     override fun toString(): String {
         val verticalMarkers = List(board.size) { alphabet[it].toUpperCase() }
-        val horizontalMarkers = List(board[0].size) { it + 1 }
+        val horizontalMarkers = List(board.first().size) { it + 1 }
         val threeSpaces = "   "
         val twoSpaces = "  "
         val result = StringBuilder()
@@ -122,13 +120,13 @@ class TicTacToe(
         for ((i, row) in board.withIndex()) {
             with(result) {
                 append(verticalMarkers[i])
-                append(row.joinToString(" | ", twoSpaces) { it.symbol })
+                append(row.joinToString(" | ", twoSpaces) { it.toString() })
             }
             if (i < board.lastIndex) {
                 with(result) {
                     append("\n  ")
-                    repeat(board[0].size) { append("---") }
-                    repeat(board[0].size - 1) { append("-") }
+                    repeat(board.first().size) { append("---") }
+                    repeat(board.first().size - 1) { append("-") }
                     append("\n")
                 }
             }

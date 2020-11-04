@@ -2,7 +2,7 @@ package dev
 
 import java.lang.Exception
 
-enum class CellType(val symbol: String) {
+enum class CellType(private val symbol: String) {
     FIRST("O"),
     SECOND("X"),
     THIRD("A"),
@@ -13,17 +13,15 @@ enum class CellType(val symbol: String) {
     EIGHTH("F"),
     NINTH("G"),
     TENTH("H"),
-    EMPTY(" "),
-    UNDEFINED("UNDEFINED");
+    NONE(" ");
+
+    override fun toString(): String = this.symbol
+
     companion object {
-        fun getByIndex(number: Int): CellType {
-            for (cellType in values()) {
-                if (cellType == EMPTY || cellType == UNDEFINED)
-                    throw Exception("Player number stack overflow")
-                if (number == cellType.ordinal)
-                    return cellType
-            }
-            throw Exception("Invalid player number")
-        }
+        fun getByIndex(number: Int): CellType =
+                when (val cellType = values()[number]) {
+                    NONE -> throw Exception("Player number stack overflow")
+                    else -> cellType
+                }
     }
 }
